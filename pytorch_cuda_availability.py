@@ -2,7 +2,6 @@ import torch
 import os
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_num
 
 print('CUDA availity: {}'.format(torch.cuda.is_available()))
 if torch.cuda.is_available():
