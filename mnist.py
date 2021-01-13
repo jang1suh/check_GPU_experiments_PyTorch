@@ -6,13 +6,14 @@ from https://github.com/pytorch/examples/blob/master/mnist/main.py
 from __future__ import print_function
 import argparse
 import os
+import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
-from tqdm import tqdm
 from torch.optim.lr_scheduler import StepLR
+from tqdm import tqdm
 
 class CNN1(nn.Module):
     def __init__(self):
@@ -36,14 +37,15 @@ class CNN1(nn.Module):
         x = F.relu(x)
         x = self.dropout2(x)
         x = self.fc2(x)
-        # output = F.log_softmax(x, dim=1)
         return x
 
 
 def train(args, model, device, train_loader, optimizer, criterion, epoch):
     model.train()
+    tic = time.perf_counter()
     with tqdm(desc="Training", total=len(train_loader.dataset)) as pbar:
         training_loss_sum = 0.0
+        processed_samples = 0
         for batch_idx, (data, target) in enumerate(train_loader):
             data, target = data.to(device), target.to(device)
             optimizer.zero_grad()
@@ -52,15 +54,18 @@ def train(args, model, device, train_loader, optimizer, criterion, epoch):
             loss.backward()
             optimizer.step()
             training_loss_sum += loss.item()
-            pbar.update(len(data))
-            pbar.set_postfix_str("Training loss: %.3f" % (loss.item() / len(data)))
-            if args.dry_run:
-                break
-        pbar.set_postfix_str("Training loss: %.3f" % (training_loss_sum / len(train_loader.dataset)))
-
+            processed_samples += len(data)
+            if processed_samples > 2000 or batch_idx == len(train_loader)-1: # to make update speed similar regardless of different batch sizes
+                pbar.update(processed_samples)
+                pbar.set_postfix_str("Training loss: %.3f" % (loss.item() / len(data)))
+                processed_samples = 0
+        pbar.set_postfix_str("Training loss: %.3f" % (training_loss_sum / len(train_loader.dataset))) # average loss of this epoch
+    toc = time.perf_counter()
+    print('Elapsed time of this training epoch: {:.3f}s'.format(toc-tic))
 
 def test(model, device, test_loader, criterion):
     model.eval()
+    tic = time.perf_counter()
     test_loss = 0
     correct = 0
     with torch.no_grad():
@@ -73,28 +78,24 @@ def test(model, device, test_loader, criterion):
 
     test_loss /= len(test_loader.dataset)
 
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+    toc = time.perf_counter()
+    print('Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.1f}%)'.format(
         test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
+    print('Elapsed time of this testing: {:.3f}s\n'.format(toc-tic))
 
 
 def main():
     # Training settings
-    parser = argparse.ArgumentParser(description='PyTorch MNIST Example')
-    parser.add_argument('--batch_size', type=int, default=64, metavar='N',
-                        help='input batch size for training (default: 64)')
+    parser = argparse.ArgumentParser(description='PyTorch MNIST sample experiment')
+    parser.add_argument('--batch_size', type=int, default=128, metavar='N',
+                        help='input batch size for training (default: 128)')
     parser.add_argument('--test_batch_size', type=int, default=1000, metavar='N',
                         help='input batch size for testing (default: 1000)')
-    parser.add_argument('--epochs', type=int, default=14, metavar='N',
-                        help='number of epochs to train (default: 14)')
-    parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
-                        help='learning rate (default: 0.1)')
+    parser.add_argument('--epochs', type=int, default=10, metavar='N',
+                        help='number of epochs to train (default: 10)')
     parser.add_argument('--no_cuda', action='store_true', default=False,
                         help='disables CUDA training')
-    parser.add_argument('--dry_run', action='store_true', default=False,
-                        help='quickly check a single pass')
-    parser.add_argument('--seed', type=int, default=1, metavar='S',
-                        help='random seed (default: 1)')
     parser.add_argument("--gpu_num", default='0', metavar='N', help="gpu number (default: 0)")
     parser.add_argument("--model", default="cnn1", choices=MODEL_MAP.keys(), help="model")
     args = parser.parse_args()
@@ -103,7 +104,7 @@ def main():
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_num
 
     use_cuda = not args.no_cuda and torch.cuda.is_available()
-    torch.manual_seed(args.seed)
+    torch.manual_seed(42)
     device = torch.device("cuda" if use_cuda else "cpu")
 
     print('Device: {}'.format(device))
@@ -132,7 +133,7 @@ def main():
 
     model = MODEL_MAP[args.model]().to(device)
     criterion = nn.CrossEntropyLoss(reduction='sum')
-    optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
+    optimizer = optim.Adadelta(model.parameters(), lr=0.1)
     scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
 
     for epoch in range(1, args.epochs + 1):

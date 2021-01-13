@@ -1,22 +1,28 @@
-# check_GPU_experiments
-simple experiments for checking GPU availability and status (Now only supports PyTorch)
+# check_GPU_experiments_PyTorch
+Simple experiments for checking GPU availability, status, and speed using PyTorch
 
 ### Dependencies
 - pytorch
 - torchvision
 - tqdm
 
-### pytorch_cuda_availability.py
+### cuda_availability.py
 - Checks CUDA availability and CUDA devices.
 - Usage
 ```
     python pytorch_cuda_availability.py
 ```
 
-### pytorch_mnist.py
+### mnist.py
 - Runs simple experiment with MNIST dataset.
 - Usage
 ```
     python pytorch_mnist.py
-        --
+        --batch_size [int]          (default: 128)
+        --test_batch_size [int]     (default: 1000)
+        --epochs [int]              (default: 10)
+        --gpu_num [int]             (default: 0)
+        --model [model name]        (default: 'cnn1')
+        --no_cuda                   (default: False)
 ```
+- Provided models: `cnn1`
