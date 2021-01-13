@@ -1,5 +1,5 @@
 '''
-pytorch MNIST example
+Based on pytorch MNIST example
 from https://github.com/pytorch/examples/blob/master/mnist/main.py
 '''
 
@@ -39,6 +39,87 @@ class CNN1(nn.Module):
         x = self.fc2(x)
         return x
 
+class MNIST_Resnet18(torch.nn.Module):
+    def __init__(self):
+        super(MNIST_Resnet18, self).__init__()
+        self.model = torch.hub.load(
+            "pytorch/vision:v0.6.0",
+            "resnet18",
+            pretrained=False,
+            num_classes=10,
+        )
+        self.model.conv1 = torch.nn.Conv2d(
+            1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
+        )
+
+    def forward(self, input_data):
+        return self.model(input_data)
+
+
+class MNIST_Resnet34(torch.nn.Module):
+    def __init__(self):
+        super(MNIST_Resnet34, self).__init__()
+        self.model = torch.hub.load(
+            "pytorch/vision:v0.6.0",
+            "resnet34",
+            pretrained=False,
+            num_classes=10,
+        )
+        self.model.conv1 = torch.nn.Conv2d(
+            1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
+        )
+
+    def forward(self, input_data):
+        return self.model(input_data)
+
+
+class MNIST_Resnet50(torch.nn.Module):
+    def __init__(self):
+        super(MNIST_Resnet50, self).__init__()
+        self.model = torch.hub.load(
+            "pytorch/vision:v0.6.0",
+            "resnet50",
+            pretrained=False,
+            num_classes=10,
+        )
+        self.model.conv1 = torch.nn.Conv2d(
+            1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
+        )
+
+    def forward(self, input_data):
+        return self.model(input_data)
+
+class MNIST_Resnet101(torch.nn.Module):
+    def __init__(self):
+        super(MNIST_Resnet101, self).__init__()
+        self.model = torch.hub.load(
+            "pytorch/vision:v0.6.0",
+            "resnet101",
+            pretrained=False,
+            num_classes=10,
+        )
+        self.model.conv1 = torch.nn.Conv2d(
+            1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
+        )
+
+    def forward(self, input_data):
+        return self.model(input_data)
+
+class MNIST_Resnet152(torch.nn.Module):
+    def __init__(self):
+        super(MNIST_Resnet152, self).__init__()
+        self.model = torch.hub.load(
+            "pytorch/vision:v0.6.0",
+            "resnet152",
+            pretrained=False,
+            num_classes=10,
+        )
+        self.model.conv1 = torch.nn.Conv2d(
+            1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
+        )
+
+    def forward(self, input_data):
+        return self.model(input_data)
 
 def train(args, model, device, train_loader, optimizer, criterion, epoch):
     model.train()
@@ -86,7 +167,6 @@ def test(model, device, test_loader, criterion):
 
 
 def main():
-    # Training settings
     parser = argparse.ArgumentParser(description='PyTorch MNIST sample experiment')
     parser.add_argument('--batch_size', type=int, default=128, metavar='N',
                         help='input batch size for training (default: 128)')
@@ -94,9 +174,11 @@ def main():
                         help='input batch size for testing (default: 1000)')
     parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 10)')
+    parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
+                        help='learning rate (default: 0.1)')
     parser.add_argument('--no_cuda', action='store_true', default=False,
                         help='disables CUDA training')
-    parser.add_argument("--gpu_num", default='0', metavar='N', help="gpu number (default: 0)")
+    parser.add_argument("--gpu_num", default='1', metavar='N', help="gpu number (default: 0)")
     parser.add_argument("--model", default="cnn1", choices=MODEL_MAP.keys(), help="model")
     args = parser.parse_args()
     
@@ -133,7 +215,7 @@ def main():
 
     model = MODEL_MAP[args.model]().to(device)
     criterion = nn.CrossEntropyLoss(reduction='sum')
-    optimizer = optim.Adadelta(model.parameters(), lr=0.1)
+    optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
     scheduler = StepLR(optimizer, step_size=1, gamma=0.7)
 
     for epoch in range(1, args.epochs + 1):
@@ -144,6 +226,11 @@ def main():
 
 MODEL_MAP = {
     "cnn1": CNN1,
+    "resnet18": MNIST_Resnet18,
+    "resnet34": MNIST_Resnet34,
+    "resnet50": MNIST_Resnet50,
+    "resnet101": MNIST_Resnet101,
+    "resnet152": MNIST_Resnet152,
 }
 
 if __name__ == '__main__':
