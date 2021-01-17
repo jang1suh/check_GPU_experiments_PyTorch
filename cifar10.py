@@ -1,6 +1,6 @@
 '''
-Based on pytorch MNIST example
-from https://github.com/pytorch/examples/blob/master/mnist/main.py
+Based on pytorch CIFAR10 example
+from https://tutorials.pytorch.kr/beginner/blitz/cifar10_tutorial.html
 '''
 
 from __future__ import print_function
@@ -18,104 +18,84 @@ from tqdm import tqdm
 class CNN1(nn.Module):
     def __init__(self):
         super(CNN1, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, 3, 1)
-        self.conv2 = nn.Conv2d(32, 64, 3, 1)
-        self.dropout1 = nn.Dropout(0.25)
-        self.dropout2 = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(9216, 128)
-        self.fc2 = nn.Linear(128, 10)
+        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
 
     def forward(self, x):
-        x = self.conv1(x)
-        x = F.relu(x)
-        x = self.conv2(x)
-        x = F.relu(x)
-        x = F.max_pool2d(x, 2)
-        x = self.dropout1(x)
-        x = torch.flatten(x, 1)
-        x = self.fc1(x)
-        x = F.relu(x)
-        x = self.dropout2(x)
-        x = self.fc2(x)
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(-1, 16 * 5 * 5)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
         return x
 
-class MNIST_Resnet18(torch.nn.Module):
+class CIFAR10_Resnet18(torch.nn.Module):
     def __init__(self):
-        super(MNIST_Resnet18, self).__init__()
+        super(CIFAR10_Resnet18, self).__init__()
         self.model = torch.hub.load(
             "pytorch/vision:v0.6.0",
             "resnet18",
             pretrained=False,
             num_classes=10,
         )
-        self.model.conv1 = torch.nn.Conv2d(
-            1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
-        )
 
     def forward(self, input_data):
         return self.model(input_data)
 
 
-class MNIST_Resnet34(torch.nn.Module):
+class CIFAR10_Resnet34(torch.nn.Module):
     def __init__(self):
-        super(MNIST_Resnet34, self).__init__()
+        super(CIFAR10_Resnet34, self).__init__()
         self.model = torch.hub.load(
             "pytorch/vision:v0.6.0",
             "resnet34",
             pretrained=False,
             num_classes=10,
         )
-        self.model.conv1 = torch.nn.Conv2d(
-            1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
-        )
 
     def forward(self, input_data):
         return self.model(input_data)
 
 
-class MNIST_Resnet50(torch.nn.Module):
+class CIFAR10_Resnet50(torch.nn.Module):
     def __init__(self):
-        super(MNIST_Resnet50, self).__init__()
+        super(CIFAR10_Resnet50, self).__init__()
         self.model = torch.hub.load(
             "pytorch/vision:v0.6.0",
             "resnet50",
             pretrained=False,
             num_classes=10,
         )
-        self.model.conv1 = torch.nn.Conv2d(
-            1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
-        )
 
     def forward(self, input_data):
         return self.model(input_data)
 
-class MNIST_Resnet101(torch.nn.Module):
+class CIFAR10_Resnet101(torch.nn.Module):
     def __init__(self):
-        super(MNIST_Resnet101, self).__init__()
+        super(CIFAR10_Resnet101, self).__init__()
         self.model = torch.hub.load(
             "pytorch/vision:v0.6.0",
             "resnet101",
             pretrained=False,
             num_classes=10,
         )
-        self.model.conv1 = torch.nn.Conv2d(
-            1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
-        )
 
     def forward(self, input_data):
         return self.model(input_data)
 
-class MNIST_Resnet152(torch.nn.Module):
+class CIFAR10_Resnet152(torch.nn.Module):
     def __init__(self):
-        super(MNIST_Resnet152, self).__init__()
+        super(CIFAR10_Resnet152, self).__init__()
         self.model = torch.hub.load(
             "pytorch/vision:v0.6.0",
             "resnet152",
             pretrained=False,
             num_classes=10,
-        )
-        self.model.conv1 = torch.nn.Conv2d(
-            1, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False
         )
 
     def forward(self, input_data):
@@ -167,7 +147,7 @@ def test(model, device, test_loader, criterion):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='PyTorch MNIST sample experiment')
+    parser = argparse.ArgumentParser(description='PyTorch CIFAR10 sample experiment')
     parser.add_argument('--batch_size', type=int, default=128, metavar='N',
                         help='input batch size for training (default: 128)')
     parser.add_argument('--test_batch_size', type=int, default=1000, metavar='N',
@@ -204,11 +184,11 @@ def main():
 
     transform=transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
         ])
-    train_set = datasets.MNIST('./data', train=True, download=True,
+    train_set = datasets.CIFAR10('./data', train=True, download=True,
                        transform=transform)
-    test_set = datasets.MNIST('./data', train=False,
+    test_set = datasets.CIFAR10('./data', train=False,
                        transform=transform)
     train_loader = torch.utils.data.DataLoader(train_set,**train_kwargs)
     test_loader = torch.utils.data.DataLoader(test_set, **test_kwargs)
@@ -226,11 +206,11 @@ def main():
 
 MODEL_MAP = {
     "cnn1": CNN1,
-    "resnet18": MNIST_Resnet18,
-    "resnet34": MNIST_Resnet34,
-    "resnet50": MNIST_Resnet50,
-    "resnet101": MNIST_Resnet101,
-    "resnet152": MNIST_Resnet152,
+    "resnet18": CIFAR10_Resnet18,
+    "resnet34": CIFAR10_Resnet34,
+    "resnet50": CIFAR10_Resnet50,
+    "resnet101": CIFAR10_Resnet101,
+    "resnet152": CIFAR10_Resnet152,
 }
 
 if __name__ == '__main__':
