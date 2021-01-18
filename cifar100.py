@@ -158,7 +158,7 @@ def main():
                         help='learning rate (default: 0.1)')
     parser.add_argument('--no_cuda', action='store_true', default=False,
                         help='disables CUDA training')
-    parser.add_argument("--gpu_num", default='9', metavar='N', help="gpu number (default: 0)")
+    parser.add_argument("--gpu_num", default='0', metavar='N', help="gpu number (default: 0)")
     parser.add_argument("--model", default="cnn1", choices=MODEL_MAP.keys(), help="model")
     args = parser.parse_args()
     

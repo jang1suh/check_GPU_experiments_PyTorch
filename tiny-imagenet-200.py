@@ -153,7 +153,7 @@ def main():
     device = torch.device("cuda" if use_cuda else "cpu")
 
     torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.benchmark = False
 
     torch.manual_seed(42)
     torch.cuda.manual_seed_all(42)
