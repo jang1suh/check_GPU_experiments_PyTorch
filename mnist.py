@@ -186,8 +186,15 @@ def main():
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_num
 
     use_cuda = not args.no_cuda and torch.cuda.is_available()
-    torch.manual_seed(42)
     device = torch.device("cuda" if use_cuda else "cpu")
+
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+    torch.manual_seed(42)
+    torch.cuda.manual_seed_all(42)
+    random.seed(42)
+    np.random.seed(42)
 
     print('Device: {}'.format(device))
     if use_cuda:

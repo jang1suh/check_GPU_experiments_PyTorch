@@ -14,6 +14,8 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
 from tqdm import tqdm
+import random
+import numpy as np
 
 class ImageNet_Resnet18(torch.nn.Module):
     def __init__(self):
@@ -22,6 +24,7 @@ class ImageNet_Resnet18(torch.nn.Module):
             "pytorch/vision:v0.6.0",
             "resnet18",
             pretrained=False,
+	    num_classes=200,
         )
 
     def forward(self, input_data):
@@ -35,6 +38,7 @@ class ImageNet_Resnet34(torch.nn.Module):
             "pytorch/vision:v0.6.0",
             "resnet34",
             pretrained=False,
+	    num_classes=200,
         )
 
     def forward(self, input_data):
@@ -48,6 +52,7 @@ class ImageNet_Resnet50(torch.nn.Module):
             "pytorch/vision:v0.6.0",
             "resnet50",
             pretrained=False,
+	    num_classes=200,
         )
 
     def forward(self, input_data):
@@ -60,6 +65,7 @@ class ImageNet_Resnet101(torch.nn.Module):
             "pytorch/vision:v0.6.0",
             "resnet101",
             pretrained=False,
+	    num_classes=200,
         )
 
     def forward(self, input_data):
@@ -72,6 +78,7 @@ class ImageNet_Resnet152(torch.nn.Module):
             "pytorch/vision:v0.6.0",
             "resnet152",
             pretrained=False,
+	    num_classes=200,
         )
 
     def forward(self, input_data):
@@ -124,11 +131,11 @@ def test(model, device, test_loader, criterion):
 
 def main():
     parser = argparse.ArgumentParser(description='PyTorch ImageNet sample experiment')
-    parser.add_argument('--data', metaver='DIR', required=True, help='path to imagenet dataset directory')
+    parser.add_argument('--data', metavar='DIR', required=True, help='path to tiny-imagenet-200 dataset directory')
     parser.add_argument('--batch_size', type=int, default=128, metavar='N',
                         help='input batch size for training (default: 128)')
     parser.add_argument('--test_batch_size', type=int, default=1000, metavar='N',
-                        help='input batch size for testing (default: 128)')
+                        help='input batch size for testing (default: 1000)')
     parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
@@ -143,8 +150,15 @@ def main():
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_num
 
     use_cuda = not args.no_cuda and torch.cuda.is_available()
-    torch.manual_seed(42)
     device = torch.device("cuda" if use_cuda else "cpu")
+
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
+
+    torch.manual_seed(42)
+    torch.cuda.manual_seed_all(42)
+    random.seed(42)
+    np.random.seed(42)
 
     print('Device: {}'.format(device))
     if use_cuda:
@@ -153,7 +167,7 @@ def main():
     train_kwargs = {'batch_size': args.batch_size}
     test_kwargs = {'batch_size': args.test_batch_size}
     if use_cuda:
-        cuda_kwargs = {'num_workers': 4,
+        cuda_kwargs = {'num_workers': 2,
                        'pin_memory': True,
                        'shuffle': True}
         train_kwargs.update(cuda_kwargs)

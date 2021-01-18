@@ -14,6 +14,8 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
 from tqdm import tqdm
+import random
+import numpy as np
 
 class CNN1(nn.Module):
     def __init__(self):
@@ -156,7 +158,7 @@ def main():
                         help='learning rate (default: 0.1)')
     parser.add_argument('--no_cuda', action='store_true', default=False,
                         help='disables CUDA training')
-    parser.add_argument("--gpu_num", default='0', metavar='N', help="gpu number (default: 0)")
+    parser.add_argument("--gpu_num", default='9', metavar='N', help="gpu number (default: 0)")
     parser.add_argument("--model", default="cnn1", choices=MODEL_MAP.keys(), help="model")
     args = parser.parse_args()
     
@@ -164,9 +166,16 @@ def main():
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_num
 
     use_cuda = not args.no_cuda and torch.cuda.is_available()
-    torch.manual_seed(42)
     device = torch.device("cuda" if use_cuda else "cpu")
 
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+    torch.manual_seed(42)
+    torch.cuda.manual_seed_all(42)
+    random.seed(42)
+    np.random.seed(42)
+ 
     print('Device: {}'.format(device))
     if use_cuda:
         print('VGA {}: {}\n'.format(int(args.gpu_num), torch.cuda.get_device_name()))
